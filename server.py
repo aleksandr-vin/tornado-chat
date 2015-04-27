@@ -11,8 +11,10 @@ import tornado.websocket
 from tornado import template
 from tornado.escape import linkify
 
-import pymongo
+from pymongo import MongoClient
 
+MONGO_HOST = os.environ.get('MONGO_PORT_27017_TCP_ADDR', 'mongo')
+MONGO_PORT = int(os.environ.get('MONGO_PORT_27017_TCP_PORT', '27017'))
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -45,7 +47,7 @@ class Application(tornado.web.Application):
         settings = {
             'static_url_prefix': '/static/',
         }
-        connection = pymongo.Connection('127.0.0.1', 27017)
+        connection = MongoClient(MONGO_HOST, MONGO_PORT)
         self.db = connection.chat
         handlers = (
             (r'/', MainHandler),
