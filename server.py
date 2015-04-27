@@ -11,15 +11,9 @@ import tornado.websocket
 from tornado import template
 from tornado.escape import linkify
 
-from pymongo import MongoClient
-
-MONGO_HOST = os.environ.get('MONGO_PORT_27017_TCP_ADDR', 'mongo')
-MONGO_PORT = int(os.environ.get('MONGO_PORT_27017_TCP_PORT', '27017'))
-
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        db = self.application.db
-        messages = db.chat.find()
+        messages=[]
         self.render('index.html', messages=messages)
 
 
@@ -28,9 +22,7 @@ class WebSocket(tornado.websocket.WebSocketHandler):
         self.application.webSocketsPool.append(self)
 
     def on_message(self, message):
-        db = self.application.db
         message_dict = json.loads(message);
-        db.chat.insert(message_dict)
         for key, value in enumerate(self.application.webSocketsPool):
             if value != self:
                 value.ws_connection.write_message(message)
@@ -47,8 +39,6 @@ class Application(tornado.web.Application):
         settings = {
             'static_url_prefix': '/static/',
         }
-        connection = MongoClient(MONGO_HOST, MONGO_PORT)
-        self.db = connection.chat
         handlers = (
             (r'/', MainHandler),
             (r'/websocket/?', WebSocket),
